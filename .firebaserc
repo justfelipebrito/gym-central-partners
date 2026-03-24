@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "gym-central-7d949"
+  },
+  "targets": {
+    "gym-central-7d949": {
+      "hosting": {
+        "partners": [
+          "gym-central-7d949"
+        ]
+      }
+    }
+  }
+}

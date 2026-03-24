@@ -1,0 +1,142 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    // Retrieve the caller's professional doc (if exists)
+    function getProfessionalByUid() {
+      return get(/databases/$(database)/documents/professionals/$(uid()));
+    }
+
+    // True when the caller owns a professional doc at the given professionalId
+    function ownsProfessional(professionalId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/professionals/$(professionalId)) &&
+        get(/databases/$(database)/documents/professionals/$(professionalId)).data.ownerUid == uid();
+    }
+
+    function professionalRole(professionalId) {
+      return get(/databases/$(database)/documents/professionals/$(professionalId)).data.role;
+    }
+
+    function membershipActive(professionalId) {
+      return get(/databases/$(database)/documents/professionals/$(professionalId)).data.membershipStatus == 'active';
+    }
+
+    // ── users/{uid} ──────────────────────────────────────────────────────────
+    // Mobile app owns this collection. Partners can read when the user is linked as a client.
+    match /users/{userId} {
+      // Partners can read user docs (needed to display linked client info)
+      allow read: if isSignedIn();
+      // Mobile app manages writes (partners don't write to users collection)
+      allow write: if false;
+    }
+
+    // ── professionals/{professionalId} ───────────────────────────────────────
+    match /professionals/{professionalId} {
+      // Owner can read their own professional doc
+      allow read: if ownsProfessional(professionalId);
+      // Create is handled by Cloud Functions (service account)
+      allow create: if false;
+      // Owner can update non-sensitive fields; membershipStatus must be server-set
+      allow update: if ownsProfessional(professionalId)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['membershipStatus', 'ownerUid', 'createdAt']);
+      allow delete: if false;
+
+      // ── clientProfiles subcollection ──────────────────────────────────────
+      match /clientProfiles/{clientProfileId} {
+        allow read: if ownsProfessional(professionalId) && membershipActive(professionalId);
+        // create/update via Cloud Functions only (acceptClientRequest, createExternalClientProfile)
+        allow create: if false;
+        allow update: if false;
+        allow delete: if false;
+
+        // ── manualProgress ─────────────────────────────────────────────────
+        match /manualProgress/{entryId} {
+          allow read: if ownsProfessional(professionalId) && membershipActive(professionalId);
+          allow write: if ownsProfessional(professionalId) && membershipActive(professionalId);
+          allow delete: if false;
+        }
+
+        // ── plans ──────────────────────────────────────────────────────────
+        match /plans/{planId} {
+          allow read: if ownsProfessional(professionalId) && membershipActive(professionalId);
+          // PT can write plans where role="pt"
+          allow write: if ownsProfessional(professionalId)
+            && membershipActive(professionalId)
+            && (
+              (professionalRole(professionalId) == 'pt' && request.resource.data.role == 'pt')
+              ||
+              (professionalRole(professionalId) == 'nutritionist' && request.resource.data.role == 'nutritionist')
+            );
+          // Cook cannot write plans at all (covered by the allow write condition above)
+          allow delete: if false;
+        }
+
+        // ── replacementRequests (Nutritionist only) ────────────────────────
+        match /replacementRequests/{replacementId} {
+          allow read: if ownsProfessional(professionalId) && membershipActive(professionalId);
+          // Nutritionist can update status/resolvedAt; creation from client app
+          allow update: if ownsProfessional(professionalId)
+            && membershipActive(professionalId)
+            && professionalRole(professionalId) == 'nutritionist';
+          allow create: if false; // created by mobile app or functions
+          allow delete: if false;
+        }
+
+        // ── batches (Cook only) ─────────────────────────────────────────────
+        match /batches/{batchId} {
+          allow read: if ownsProfessional(professionalId) && membershipActive(professionalId);
+          allow write: if ownsProfessional(professionalId)
+            && membershipActive(professionalId)
+            && professionalRole(professionalId) == 'cook';
+          allow delete: if false;
+        }
+      }
+    }
+
+    // ── clientRequests/{requestId} ───────────────────────────────────────────
+    match /clientRequests/{requestId} {
+      // Signed-in professionals can read open requests (filter by role in query)
+      allow read: if isSignedIn();
+      // Acceptance MUST go through Cloud Functions (atomic transaction)
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ── Mobile app collections (read-only for partners) ──────────────────────
+
+    // challenges - PT can read to view available challenges
+    match /challenges/{challengeId} {
+      allow read: if isSignedIn() && exists(/databases/$(database)/documents/professionals/$(uid()));
+      allow write: if false;
+    }
+
+    // exercises - PT can read to select exercises for training plans
+    match /exercises/{exerciseId} {
+      allow read: if isSignedIn() && exists(/databases/$(database)/documents/professionals/$(uid()));
+      allow write: if false;
+    }
+
+    // ingredients - Nutritionists and Cooks can read
+    match /ingredients/{ingredientId} {
+      allow read: if isSignedIn() && exists(/databases/$(database)/documents/professionals/$(uid()));
+      allow write: if false;
+    }
+
+    // dailyProgress - PT and Nutritionists can read client progress
+    match /dailyProgress/{progressId} {
+      allow read: if isSignedIn() && exists(/databases/$(database)/documents/professionals/$(uid()));
+      allow write: if false;
+    }
+  }
+}
