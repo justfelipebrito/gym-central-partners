@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import { AuthPage } from '@/pages/AuthPage'
 import { PaywallPage } from '@/pages/PaywallPage'
 import { DashboardPage } from '@/pages/DashboardPage'
+import { ClientsPage } from '@/pages/ClientsPage'
 import { RequestsPage } from '@/pages/RequestsPage'
 import { ClientProfilePage } from '@/pages/ClientProfilePage'
 import { PlanPage } from '@/pages/PlanPage'
@@ -30,8 +31,9 @@ export default function App() {
             }
           >
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/requests" element={<RequestsPage />} />
+            <Route path="/clients" element={<ClientsPage />} />
             <Route path="/clients/:clientProfileId" element={<ClientProfilePage />} />
+            <Route path="/requests" element={<RequestsPage />} />
 
             {/* PT and Nutritionist only — Cook is redirected */}
             <Route

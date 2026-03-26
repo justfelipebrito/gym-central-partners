@@ -1,0 +1,337 @@
+.muscle-group-exercises-editor {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.exercises-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.group-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.group-tab {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.group-tab:hover {
+  background: var(--bg-hover);
+  border-color: var(--primary);
+}
+
+.group-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.loading-text,
+.no-exercises {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--text-muted);
+  font-style: italic;
+  text-align: center;
+  padding: 32px;
+}
+
+.exercises-content {
+  margin-top: 16px;
+}
+
+.exercises-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.exercise-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.exercise-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.exercise-order {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 32px;
+}
+
+.exercise-title-display {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.exercise-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.change-exercise-btn {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.change-exercise-btn:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.exercise-select {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.exercise-select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.remove-exercise-btn {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 24px;
+  line-height: 1;
+  width: 36px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-exercise-btn:hover {
+  background: var(--danger-light);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.exercise-settings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.setting-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.setting-field label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.setting-field input,
+.setting-field select {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--text-primary);
+  transition: border-color 0.15s;
+}
+
+.setting-field input:focus,
+.setting-field select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.series-section {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.series-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.series-header strong {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.add-series-btn {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.add-series-btn:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.series-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.series-row {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr 36px;
+  gap: 8px;
+  align-items: center;
+}
+
+.series-number {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 48px;
+}
+
+.series-reps-input,
+.series-weight-input {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--text-primary);
+  transition: border-color 0.15s;
+}
+
+.series-reps-input:focus,
+.series-weight-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.weight-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.weight-unit {
+  position: absolute;
+  right: 12px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.series-weight-input {
+  padding-right: 28px;
+}
+
+.remove-series-btn {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-series-btn:hover {
+  background: var(--danger-light);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+@media (max-width: 768px) {
+  .series-row {
+    grid-template-columns: 1fr;
+  }
+
+  .exercise-settings {
+    grid-template-columns: 1fr;
+  }
+}

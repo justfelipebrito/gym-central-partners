@@ -1,33 +1,101 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
+import { collection, query, orderBy, onSnapshot, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
 import { useProfessional } from '@/hooks/useProfessional'
 import { upsertTrainingPlan, upsertDietPlan } from '@/lib/api/functions'
-import { Card, CardTitle, SectionTitle } from '@/components/ui/Card'
+import { SectionTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { TextareaField } from '@/components/ui/FormField'
-import { colors, radius } from '@/lib/theme'
-import type { Plan, TrainingPlanContent, DietPlanContent } from '@shared/types'
+import { TrainingPlanEditor } from '@/components/plan/TrainingPlanEditor'
+import { DietPlanEditor } from '@/components/plan/DietPlanEditor'
+import { WeeklyScheduleEditor } from '@/components/plan/WeeklyScheduleEditor'
+import { MuscleGroupExercisesEditor } from '@/components/plan/MuscleGroupExercisesEditor'
+import type { Plan, TrainingPlanContent, DietPlanContent, ClientProfile } from '@shared/types'
+import './PlanPage.css'
 
-// Cook has no access to this page — enforced by RouteGuard in router
 export function PlanPage() {
   const { clientProfileId } = useParams<{ clientProfileId: string }>()
   const { professionalId, isPT, isNutritionist } = useProfessional()
   const navigate = useNavigate()
 
+  const [profile, setProfile] = useState<ClientProfile | null>(null)
+  const [userData, setUserData] = useState<any>(null)
   const [plan, setPlan] = useState<Plan | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-  // Simple JSON editor for MVP
-  const [contentJson, setContentJson] = useState('')
-  const [jsonError, setJsonError] = useState<string | null>(null)
+  // For external clients using plans subcollection
+  const [content, setContent] = useState<TrainingPlanContent | DietPlanContent | null>(null)
 
+  // For app users using users collection
+  const [schedule, setSchedule] = useState<any>({})
+  const [availableGroups, setAvailableGroups] = useState<string[]>([])
+
+  // Fetch client profile
   useEffect(() => {
     if (!professionalId || !clientProfileId) return
+
+    const profRef = doc(db, 'professionals', professionalId, 'clientProfiles', clientProfileId)
+    const unsub = onSnapshot(profRef, (snap) => {
+      if (snap.exists()) {
+        setProfile({ id: snap.id, ...snap.data() } as ClientProfile)
+      }
+    })
+    return unsub
+  }, [professionalId, clientProfileId])
+
+  // Fetch user data for app users
+  useEffect(() => {
+    if (!profile || profile.type !== 'app_user' || !profile.appUserUid) return
+
+    const userRef = doc(db, 'users', profile.appUserUid)
+    const unsub = onSnapshot(userRef, (snap) => {
+      if (snap.exists()) {
+        setUserData(snap.data())
+      }
+    })
+    return unsub
+  }, [profile])
+
+  // Load schedule for app users
+  useEffect(() => {
+    if (!profile || profile.type !== 'app_user' || !profile.appUserUid) return
+
+    const loadSchedule = async () => {
+      setLoading(true)
+      try {
+        // Load schedule
+        const scheduleRef = doc(db, 'users', profile.appUserUid, 'trainingData', 'schedule')
+        const scheduleSnap = await getDoc(scheduleRef)
+        if (scheduleSnap.exists()) {
+          setSchedule(scheduleSnap.data())
+        }
+
+        // Load available training groups from trainingGroups collection
+        const groupsRef = collection(db, 'users', profile.appUserUid, 'trainingGroups')
+        const groupsSnap = await getDocs(groupsRef)
+        const groups = groupsSnap.docs.map(d => d.id)
+
+        // Always ensure group_a, group_b, group_c are available
+        const baseGroups = ['group_a', 'group_b', 'group_c']
+        const allGroups = [...new Set([...baseGroups, ...groups])].sort()
+
+        setAvailableGroups(allGroups)
+      } catch (err) {
+        console.error('Failed to load schedule:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadSchedule()
+  }, [profile])
+
+  // Load plan for external clients
+  useEffect(() => {
+    if (!professionalId || !clientProfileId || !profile || profile.type !== 'external') return
 
     const q = query(
       collection(db, 'professionals', professionalId, 'clientProfiles', clientProfileId, 'plans'),
@@ -39,40 +107,51 @@ export function PlanPage() {
         const latest = snap.docs[0]
         const p = { id: latest.id, ...latest.data() } as Plan
         setPlan(p)
-        setContentJson(JSON.stringify(p.content, null, 2))
+        setContent(p.content)
       } else {
         setPlan(null)
         if (isPT) {
-          setContentJson(JSON.stringify(defaultTrainingPlan, null, 2))
+          setContent(defaultTrainingPlan)
         } else {
-          setContentJson(JSON.stringify(defaultDietPlan, null, 2))
+          setContent(defaultDietPlan)
         }
       }
       setLoading(false)
     })
     return unsub
-  }, [professionalId, clientProfileId, isPT])
+  }, [professionalId, clientProfileId, isPT, profile])
 
-  const handleSave = async () => {
-    if (!clientProfileId) return
-    setJsonError(null)
+  const handleSaveSchedule = async () => {
+    if (!profile || profile.type !== 'app_user' || !profile.appUserUid) return
+
     setErrorMsg(null)
     setSuccessMsg(null)
-
-    let parsed: unknown
-    try {
-      parsed = JSON.parse(contentJson)
-    } catch {
-      setJsonError('Invalid JSON — please fix before saving.')
-      return
-    }
-
     setSaving(true)
+
+    try {
+      const scheduleRef = doc(db, 'users', profile.appUserUid, 'trainingData', 'schedule')
+      await setDoc(scheduleRef, schedule)
+      setSuccessMsg('Schedule saved successfully.')
+      setTimeout(() => setSuccessMsg(null), 3000)
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to save.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSaveExternalPlan = async () => {
+    if (!clientProfileId || !content) return
+
+    setErrorMsg(null)
+    setSuccessMsg(null)
+    setSaving(true)
+
     try {
       if (isPT) {
-        await upsertTrainingPlan({ clientProfileId, content: parsed as TrainingPlanContent })
+        await upsertTrainingPlan({ clientProfileId, content: content as TrainingPlanContent })
       } else if (isNutritionist) {
-        await upsertDietPlan({ clientProfileId, content: parsed as DietPlanContent })
+        await upsertDietPlan({ clientProfileId, content: content as DietPlanContent })
       }
       setSuccessMsg('Plan saved successfully.')
     } catch (err: unknown) {
@@ -82,57 +161,90 @@ export function PlanPage() {
     }
   }
 
-  if (loading) return <div style={styles.loading}>Loading plan…</div>
+  if (loading) return <div className="loading-text">Loading plan…</div>
+
+  const isAppUser = profile?.type === 'app_user'
+  const isPro = userData?.subscriptionPlan === 'pro'
 
   return (
-    <div>
-      <button style={styles.backBtn} onClick={() => navigate(`/clients/${clientProfileId}`)}>
-        ← Client Profile
+    <div className="plan-page">
+      <button className="back-button" onClick={() => navigate(`/clients/${clientProfileId}`)}>
+        ← Back to Client Profile
       </button>
-      <SectionTitle>{isPT ? 'Training Plan' : 'Diet Plan'}</SectionTitle>
 
-      {plan && (
-        <p style={styles.muted}>
-          Last updated:{' '}
-          {plan.updatedAt?.seconds
-            ? new Date(plan.updatedAt.seconds * 1000).toLocaleString()
-            : '—'}
-        </p>
-      )}
+      <div className="plan-header">
+        <SectionTitle>{isPT ? 'Training Plan' : 'Diet Plan'}</SectionTitle>
+        {plan && (
+          <p className="last-updated">
+            Last updated:{' '}
+            {plan.updatedAt?.seconds
+              ? new Date(plan.updatedAt.seconds * 1000).toLocaleString()
+              : '—'}
+          </p>
+        )}
+      </div>
 
-      <Card>
-        <CardTitle>Plan Content (JSON Editor)</CardTitle>
-        <p style={styles.hint}>
-          Edit the plan below. The structure is flexible — see the schema in <code>shared/types/index.ts</code>.
-        </p>
-        <TextareaField
-          label=""
-          value={contentJson}
-          onChange={(e) => setContentJson(e.target.value)}
-          style={{ fontFamily: 'monospace', fontSize: 13, minHeight: 360 }}
-          error={jsonError ?? undefined}
-        />
+      {errorMsg && <div className="message error">{errorMsg}</div>}
+      {successMsg && <div className="message success">{successMsg}</div>}
 
-        {errorMsg && <p style={styles.error}>{errorMsg}</p>}
-        {successMsg && <p style={styles.success}>{successMsg}</p>}
+      {isAppUser && isPT ? (
+        // App user training plan (schedule + exercises)
+        <>
+          <div className="plan-section">
+            <WeeklyScheduleEditor
+              schedule={schedule}
+              onChange={setSchedule}
+              onSave={handleSaveSchedule}
+              availableGroups={availableGroups}
+              isPro={isPro}
+              saving={saving}
+            />
+          </div>
 
-        <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-          <Button loading={saving} onClick={handleSave}>
-            Save Plan
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => navigate(`/clients/${clientProfileId}`)}
-          >
-            Cancel
-          </Button>
-        </div>
-      </Card>
+          <div className="plan-section">
+            <MuscleGroupExercisesEditor
+              appUserUid={profile!.appUserUid!}
+              availableGroups={availableGroups}
+              isPro={isPro}
+            />
+          </div>
+        </>
+      ) : content ? (
+        // External client plan
+        <>
+          {isPT ? (
+            <TrainingPlanEditor
+              content={content as TrainingPlanContent}
+              onChange={(newContent) => setContent(newContent)}
+            />
+          ) : (
+            <DietPlanEditor
+              content={content as DietPlanContent}
+              onChange={(newContent) => setContent(newContent)}
+            />
+          )}
+
+          {errorMsg && <div className="message error">{errorMsg}</div>}
+          {successMsg && <div className="message success">{successMsg}</div>}
+
+          <div className="plan-actions">
+            <Button loading={saving} onClick={handleSaveExternalPlan}>
+              Save Plan
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => navigate(`/clients/${clientProfileId}`)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </>
+      ) : null}
     </div>
   )
 }
 
-// Default plan templates for new clients
+// Default plan templates for external clients
 const defaultTrainingPlan: TrainingPlanContent = {
   weeklySchedule: [
     {
@@ -156,50 +268,4 @@ const defaultDietPlan: DietPlanContent = {
     },
   ],
   notes: '',
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  loading: {
-    fontFamily: "'Inter', system-ui, sans-serif",
-    color: colors.textMuted,
-    padding: 32,
-    fontSize: 14,
-  },
-  backBtn: {
-    background: 'none',
-    border: 'none',
-    color: colors.textMuted,
-    cursor: 'pointer',
-    fontSize: 13,
-    padding: '0 0 8px 0',
-    marginBottom: 8,
-    display: 'block',
-  },
-  muted: {
-    color: colors.textMuted,
-    fontSize: 13,
-    marginBottom: 16,
-  },
-  hint: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    marginBottom: 8,
-    lineHeight: 1.5,
-  },
-  error: {
-    color: colors.danger,
-    background: colors.dangerLight,
-    borderRadius: radius.md,
-    padding: '8px 12px',
-    fontSize: 13,
-    marginTop: 8,
-  },
-  success: {
-    color: colors.successText,
-    background: colors.successLight,
-    borderRadius: radius.md,
-    padding: '8px 12px',
-    fontSize: 13,
-    marginTop: 8,
-  },
 }

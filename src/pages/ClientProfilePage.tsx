@@ -1,32 +1,33 @@
 import React, { useEffect, useState } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { doc, onSnapshot, collection, query, orderBy, limit } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
 import { useProfessional } from '@/hooks/useProfessional'
 import { resolveReplacementRequest } from '@/lib/api/functions'
 import { Card, CardTitle, SectionTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { WeeklySchedule } from '@/components/client/WeeklySchedule'
+import { WorkoutAdherence } from '@/components/client/WorkoutAdherence'
 import { colors, radius } from '@/lib/theme'
 import {
-  subscribeWeeklyWorkoutProgress,
   subscribeMealLogs,
-  type WeeklyWorkoutProgress,
   type MealLogEntry,
 } from '@/lib/progressAdapters'
 
-import type { ClientProfile, ManualProgressEntry, ReplacementRequest, Batch } from '@shared/types'
+import type { ClientProfile, ManualProgressEntry, ReplacementRequest, Batch, Plan, TrainingPlanContent } from '@shared/types'
 import { format } from 'date-fns'
 
 export function ClientProfilePage() {
   const { clientProfileId } = useParams<{ clientProfileId: string }>()
   const { professionalId, isPT, isNutritionist, isCook } = useProfessional()
-  const navigate = useNavigate()
 
   const [profile, setProfile] = useState<ClientProfile | null>(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
 
+  // App user data (name, height, weight, etc.)
+  const [userData, setUserData] = useState<any>(null)
+
   // App user progress
-  const [workoutProgress, setWorkoutProgress] = useState<WeeklyWorkoutProgress[]>([])
   const [mealLogs, setMealLogs] = useState<MealLogEntry[]>([])
 
   // Manual progress
@@ -37,6 +38,9 @@ export function ClientProfilePage() {
 
   // Cook: batches
   const [batches, setBatches] = useState<Batch[]>([])
+
+  // PT/Nutritionist: plans
+  const [plan, setPlan] = useState<Plan | null>(null)
 
   useEffect(() => {
     if (!professionalId || !clientProfileId) return
@@ -53,15 +57,26 @@ export function ClientProfilePage() {
     return unsub
   }, [professionalId, clientProfileId])
 
-  // Subscribe to app-user progress when profile is loaded
+  // Subscribe to user data from users collection
+  useEffect(() => {
+    if (!profile || profile.type !== 'app_user' || !profile.appUserUid) return
+
+    const userRef = doc(db, 'users', profile.appUserUid)
+    const unsub = onSnapshot(userRef, (snap) => {
+      if (snap.exists()) {
+        setUserData(snap.data())
+      }
+    })
+    return unsub
+  }, [profile])
+
+  // Subscribe to meal logs when profile is loaded
   useEffect(() => {
     if (!profile || profile.type !== 'app_user' || !profile.appUserUid) return
 
     const uid = profile.appUserUid
-    const unsubWorkout = subscribeWeeklyWorkoutProgress(uid, setWorkoutProgress)
     const unsubMeals = subscribeMealLogs(uid, setMealLogs)
     return () => {
-      unsubWorkout()
       unsubMeals()
     }
   }, [profile])
@@ -109,19 +124,45 @@ export function ClientProfilePage() {
     return unsub
   }, [professionalId, clientProfileId, isCook])
 
+  // Subscribe to plan (PT/Nutritionist)
+  useEffect(() => {
+    if (!professionalId || !clientProfileId || (!isPT && !isNutritionist)) return
+
+    const q = query(
+      collection(db, 'professionals', professionalId, 'clientProfiles', clientProfileId, 'plans'),
+      limit(1),
+    )
+    const unsub = onSnapshot(q, (snap) => {
+      if (!snap.empty) {
+        setPlan({ id: snap.docs[0].id, ...snap.docs[0].data() } as Plan)
+      } else {
+        setPlan(null)
+      }
+    })
+    return unsub
+  }, [professionalId, clientProfileId, isPT, isNutritionist])
+
   if (loadingProfile) return <div style={styles.loading}>Loading client…</div>
   if (!profile) return <div style={styles.loading}>Client not found.</div>
 
   const clientName =
     profile.type === 'external'
       ? profile.externalProfile?.name ?? 'External Client'
-      : `App User (${profile.appUserUid?.slice(0, 8)}…)`
+      : userData?.name || `App User (${profile.appUserUid?.slice(0, 8)}…)`
 
   return (
     <div>
+      {/* Breadcrumbs */}
+      <nav style={styles.breadcrumbs}>
+        <Link to="/dashboard" style={styles.breadcrumbLink}>Dashboard</Link>
+        <span style={styles.breadcrumbSeparator}>/</span>
+        <Link to="/clients" style={styles.breadcrumbLink}>Clients</Link>
+        <span style={styles.breadcrumbSeparator}>/</span>
+        <span style={styles.breadcrumbCurrent}>{clientName}</span>
+      </nav>
+
       <div style={styles.headerRow}>
         <div>
-          <button style={styles.backBtn} onClick={() => navigate('/dashboard')}>← Dashboard</button>
           <SectionTitle>{clientName}</SectionTitle>
         </div>
         <div style={styles.headerActions}>
@@ -142,40 +183,31 @@ export function ClientProfilePage() {
       <Card style={{ marginBottom: 24 }}>
         <CardTitle>Client Info</CardTitle>
         <dl style={styles.dl}>
-          <dt>Type</dt><dd>{profile.type === 'external' ? 'External Client' : 'App User'}</dd>
-          <dt>Source</dt><dd>{profile.source.replace(/_/g, ' ')}</dd>
-          {profile.type === 'external' && profile.externalProfile?.email && (
-            <><dt>Email</dt><dd>{profile.externalProfile.email}</dd></>
+          <dt>Name</dt><dd>{clientName}</dd>
+          {profile.type === 'app_user' && userData && (
+            <>
+              {userData.height && <><dt>Height</dt><dd>{userData.height} cm</dd></>}
+              {userData.weight && <><dt>Weight</dt><dd>{userData.weight} kg</dd></>}
+            </>
           )}
-          {profile.type === 'external' && profile.externalProfile?.phone && (
-            <><dt>Phone</dt><dd>{profile.externalProfile.phone}</dd></>
+          {profile.type === 'external' && (
+            <>
+              {profile.externalProfile?.email && <><dt>Email</dt><dd>{profile.externalProfile.email}</dd></>}
+              {profile.externalProfile?.phone && <><dt>Phone</dt><dd>{profile.externalProfile.phone}</dd></>}
+            </>
           )}
         </dl>
       </Card>
 
+      {/* Weekly Training Schedule (PT only) */}
+      {isPT && profile.type === 'app_user' && profile.appUserUid && (
+        <WeeklySchedule appUserUid={profile.appUserUid} />
+      )}
+
       {/* Progress panels */}
-      {profile.type === 'app_user' && (
+      {profile.type === 'app_user' && profile.appUserUid && (
         <>
-          {isPT && (
-            <Card style={{ marginBottom: 24 }}>
-              <CardTitle>Weekly Workout Adherence (Live)</CardTitle>
-              {workoutProgress.length === 0 ? (
-                <p style={styles.muted}>No workout data available yet.</p>
-              ) : (
-                <ul style={styles.progressList}>
-                  {workoutProgress.map((w) => (
-                    <li key={w.weekLabel} style={styles.progressItem}>
-                      <span style={styles.progressLabel}>{w.weekLabel}</span>
-                      <span style={styles.progressValue}>
-                        {w.daysExercised} / 7 days
-                        {w.totalMinutes > 0 && ` · ${w.totalMinutes} min`}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Card>
-          )}
+          {isPT && <WorkoutAdherence appUserUid={profile.appUserUid} />}
 
           {(isNutritionist || isCook) && (
             <Card style={{ marginBottom: 24 }}>
@@ -340,6 +372,26 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 32,
     fontSize: 14,
   },
+  breadcrumbs: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+    fontSize: 13,
+    fontFamily: "'Inter', system-ui, sans-serif",
+  },
+  breadcrumbLink: {
+    color: colors.textMuted,
+    textDecoration: 'none',
+    transition: 'color 0.15s',
+  },
+  breadcrumbSeparator: {
+    color: colors.textMuted,
+  },
+  breadcrumbCurrent: {
+    color: colors.textSecondary,
+    fontWeight: 500,
+  },
   headerRow: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -351,14 +403,6 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     gap: 8,
     marginTop: 8,
-  },
-  backBtn: {
-    background: 'none',
-    border: 'none',
-    color: colors.textMuted,
-    cursor: 'pointer',
-    fontSize: 13,
-    padding: '0 0 8px 0',
   },
   dl: {
     display: 'grid',

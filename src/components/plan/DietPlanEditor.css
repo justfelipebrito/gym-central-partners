@@ -1,0 +1,229 @@
+.diet-plan-editor {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.calories-input {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--text-primary);
+  width: 200px;
+  transition: border-color 0.15s;
+}
+
+.calories-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.meals-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.no-meals {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 24px 0;
+  text-align: center;
+}
+
+.meals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.meal-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.meal-header {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.meal-basic-fields {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.meal-name-input,
+.meal-time-input {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--text-primary);
+  transition: border-color 0.15s;
+}
+
+.meal-time-input {
+  width: 120px;
+}
+
+.meal-name-input:focus,
+.meal-time-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.remove-meal-btn {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 24px;
+  line-height: 1;
+  width: 36px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-meal-btn:hover {
+  background: var(--danger-light);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.foods-section {
+  margin-top: 12px;
+}
+
+.foods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.food-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 100px 36px;
+  gap: 8px;
+  align-items: center;
+}
+
+.food-name-input,
+.food-quantity-input,
+.food-calories-input {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--text-primary);
+  transition: border-color 0.15s;
+}
+
+.food-name-input:focus,
+.food-quantity-input:focus,
+.food-calories-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.food-name-input::placeholder,
+.food-quantity-input::placeholder,
+.food-calories-input::placeholder {
+  color: var(--text-muted);
+}
+
+.remove-food-btn {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-food-btn:hover {
+  background: var(--danger-light);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.add-food-btn {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.add-food-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--bg-hover);
+}
+
+.notes-textarea {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--text-primary);
+  resize: vertical;
+  transition: border-color 0.15s;
+}
+
+.notes-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.notes-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+  .meal-basic-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .food-row {
+    grid-template-columns: 1fr;
+  }
+}

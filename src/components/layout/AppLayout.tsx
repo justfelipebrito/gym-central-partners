@@ -6,6 +6,7 @@ import { colors, radius } from '@/lib/theme'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: '⊞' },
+  { to: '/clients', label: 'Clients', icon: '👥' },
   { to: '/requests', label: 'Requests', icon: '📥' },
   { to: '/settings', label: 'Settings', icon: '⚙' },
 ]
