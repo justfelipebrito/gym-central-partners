@@ -1,39 +1,42 @@
 import { Link } from 'react-router-dom'
-import { useClientProfiles } from '@/hooks/useClientProfiles'
+import { useClientProfiles, type EnrichedClientProfile } from '@/hooks/useClientProfiles'
 import { useProfessional } from '@/hooks/useProfessional'
 import { Card } from '@/components/ui/Card'
-import { colors, radius } from '@/lib/theme'
-import type { ClientProfile } from '@shared/types'
+import './ClientsPage.css'
 
 export function ClientsPage() {
   const { professionalId } = useProfessional()
   const { profiles, loading, error } = useClientProfiles(professionalId)
 
   if (loading) {
-    return <div style={styles.loading}>Loading clients...</div>
+    return <div className="loading-text">Loading clients...</div>
   }
 
   if (error) {
-    return <div style={styles.error}>Error loading clients: {error}</div>
+    return <div className="error-text">Error loading clients: {error}</div>
   }
 
   return (
-    <div>
-      <h1 style={styles.title}>Clients</h1>
-      <p style={styles.subtitle}>
-        {profiles.length} {profiles.length === 1 ? 'client' : 'clients'}
-      </p>
+    <div className="clients-page">
+      <div className="clients-header">
+        <div>
+          <h1 className="clients-title">Clients</h1>
+          <p className="clients-subtitle">
+            {profiles.length} {profiles.length === 1 ? 'client' : 'clients'}
+          </p>
+        </div>
+      </div>
 
       {profiles.length === 0 ? (
-        <Card>
-          <p style={styles.emptyText}>
+        <Card className="empty-state">
+          <p className="empty-text">
             No clients yet. Accept requests from the Requests page to get started.
           </p>
         </Card>
       ) : (
-        <div style={styles.grid}>
+        <div className="clients-list">
           {profiles.map((profile) => (
-            <ClientCard key={profile.id} profile={profile} />
+            <ClientListItem key={profile.id} profile={profile} />
           ))}
         </div>
       )}
@@ -41,153 +44,40 @@ export function ClientsPage() {
   )
 }
 
-function ClientCard({ profile }: { profile: ClientProfile }) {
+function ClientListItem({ profile }: { profile: EnrichedClientProfile }) {
   const clientName =
     profile.type === 'external'
       ? profile.externalProfile?.name ?? 'External Client'
-      : 'App User'
+      : profile.userData?.name || 'App User'
 
   const clientSubtext =
     profile.type === 'external'
       ? profile.externalProfile?.email || profile.externalProfile?.phone || ''
-      : `UID: ${profile.appUserUid?.slice(0, 12)}...`
+      : profile.userData?.email || ''
 
   return (
-    <Link to={`/clients/${profile.id}`} style={styles.cardLink}>
-      <Card style={styles.clientCard}>
-        <div style={styles.avatar}>
+    <Link to={`/clients/${profile.id}`} className="client-list-item-link">
+      <div className="client-list-item">
+        <div className="client-avatar">
           {clientName.charAt(0).toUpperCase()}
         </div>
-        <div style={styles.clientInfo}>
-          <h3 style={styles.clientName}>{clientName}</h3>
-          {clientSubtext && <p style={styles.clientSubtext}>{clientSubtext}</p>}
-          <div style={styles.meta}>
-            <span style={styles.badge}>
-              {profile.type === 'external' ? 'External' : 'App User'}
-            </span>
-            <span style={styles.metaText}>
-              {profile.source.replace(/_/g, ' ')}
-            </span>
-          </div>
+
+        <div className="client-main-info">
+          <h3 className="client-name">{clientName}</h3>
+          {clientSubtext && <p className="client-subtext">{clientSubtext}</p>}
         </div>
-        <div style={styles.arrow}>→</div>
-      </Card>
+
+        <div className="client-meta">
+          <span className="client-badge">
+            {profile.type === 'external' ? 'External' : 'App User'}
+          </span>
+          <span className="client-source">
+            {profile.source.replace(/_/g, ' ')}
+          </span>
+        </div>
+
+        <div className="client-arrow">→</div>
+      </div>
     </Link>
   )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  loading: {
-    fontFamily: "'Inter', system-ui, sans-serif",
-    color: colors.textMuted,
-    padding: 32,
-    fontSize: 14,
-  },
-  error: {
-    fontFamily: "'Inter', system-ui, sans-serif",
-    color: colors.danger,
-    padding: 32,
-    fontSize: 14,
-  },
-  title: {
-    fontFamily: "'Inter', system-ui, sans-serif",
-    fontSize: 28,
-    fontWeight: 800,
-    color: colors.textPrimary,
-    margin: '0 0 4px 0',
-    letterSpacing: '-0.02em',
-  },
-  subtitle: {
-    fontFamily: "'Inter', system-ui, sans-serif",
-    fontSize: 14,
-    color: colors.textMuted,
-    margin: '0 0 24px 0',
-  },
-  emptyText: {
-    fontFamily: "'Inter', system-ui, sans-serif",
-    fontSize: 14,
-    color: colors.textMuted,
-    margin: 0,
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-    gap: 16,
-  },
-  cardLink: {
-    textDecoration: 'none',
-    color: 'inherit',
-  },
-  clientCard: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 16,
-    padding: 20,
-    cursor: 'pointer',
-    transition: 'all 0.15s ease',
-    ':hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
-    },
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.full,
-    background: colors.primary,
-    color: colors.primaryText,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 18,
-    fontWeight: 700,
-    flexShrink: 0,
-  },
-  clientInfo: {
-    flex: 1,
-    minWidth: 0,
-  },
-  clientName: {
-    fontFamily: "'Inter', system-ui, sans-serif",
-    fontSize: 16,
-    fontWeight: 600,
-    color: colors.textPrimary,
-    margin: '0 0 4px 0',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  },
-  clientSubtext: {
-    fontFamily: "'Inter', system-ui, sans-serif",
-    fontSize: 13,
-    color: colors.textMuted,
-    margin: '0 0 8px 0',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  },
-  meta: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-  },
-  badge: {
-    fontFamily: "'Inter', system-ui, sans-serif",
-    fontSize: 11,
-    fontWeight: 600,
-    color: colors.primary,
-    background: colors.primaryLight,
-    padding: '2px 8px',
-    borderRadius: radius.full,
-  },
-  metaText: {
-    fontFamily: "'Inter', system-ui, sans-serif",
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  arrow: {
-    fontSize: 20,
-    color: colors.textMuted,
-    flexShrink: 0,
-  },
 }
