@@ -12,7 +12,8 @@
       "Bash(echo:*)",
       "Bash(xargs kill:*)",
       "Bash(npm run emulators:fresh:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

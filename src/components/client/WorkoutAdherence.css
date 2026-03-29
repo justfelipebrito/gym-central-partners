@@ -10,6 +10,204 @@
   margin: 0;
 }
 
+/* Statistics Section */
+.adherence-stats {
+  display: flex;
+  justify-content: space-around;
+  gap: 16px;
+  padding: 16px 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--divider);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-value {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Calendar Grid */
+.calendar-container {
+  margin-bottom: 16px;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.weekday-label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 8px 0;
+}
+
+.calendar-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-cell {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  padding: 4px;
+}
+
+.day-cell:hover:not(.empty) {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.day-cell.empty {
+  background-color: transparent;
+}
+
+.day-cell.trained {
+  /* Background color set via inline style */
+}
+
+.day-cell.scheduled {
+  background-color: rgba(156, 163, 175, 0.2);
+  border: 2px dashed rgba(156, 163, 175, 0.5);
+}
+
+/* Two-row content for trained days - ONLY for Workout Adherence calendar */
+.workout-adherence-card .cell-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+}
+
+.workout-adherence-card .training-group {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  color: white;
+}
+
+.workout-adherence-card .training-date {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  color: white;
+  opacity: 0.9;
+}
+
+.workout-adherence-card .scheduled-indicator {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.workout-adherence-card .scheduled-date {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+.workout-adherence-card .day-number {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.workout-adherence-card .rest-date {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* Legend */
+.calendar-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--divider);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-item span {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.trained-color {
+  background-color: #3B82F6;
+}
+
+.scheduled-color {
+  background-color: rgba(156, 163, 175, 0.2);
+  border: 2px dashed rgba(156, 163, 175, 0.5);
+}
+
+.rest-color {
+  background-color: transparent;
+  border: 2px solid rgba(156, 163, 175, 0.3);
+}
+
+/* Old list styles (kept for backward compatibility) */
 .adherence-list {
   list-style: none;
   padding: 0;
