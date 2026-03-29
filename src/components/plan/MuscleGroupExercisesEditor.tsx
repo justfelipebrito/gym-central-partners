@@ -3,6 +3,24 @@ import { collection, getDocs, doc, setDoc, deleteDoc, query as firestoreQuery } 
 import { db } from '@/lib/firebase/config'
 import { Card, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { SaveButton } from '@/components/ui/SaveButton'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import './MuscleGroupExercisesEditor.css'
 
 interface Exercise {
@@ -28,6 +46,140 @@ interface MuscleGroupExercisesEditorProps {
 
 const FREE_GROUPS = ['group_a', 'group_b', 'group_c']
 
+interface SortableExerciseProps {
+  exercise: Exercise
+  exIdx: number
+  availableExercises: Array<{ id: string; title: string }>
+  updateExercise: (index: number, field: string, value: any) => void
+  removeExercise: (index: number) => void
+  addSeries: (exerciseIndex: number) => void
+  updateSeries: (exerciseIndex: number, seriesIndex: number, field: string, value: any) => void
+  removeSeries: (exerciseIndex: number, seriesIndex: number) => void
+}
+
+function SortableExercise({
+  exercise,
+  exIdx,
+  availableExercises,
+  updateExercise,
+  removeExercise,
+  addSeries,
+  updateSeries,
+  removeSeries,
+}: SortableExerciseProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: exercise.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className={`exercise-card ${isDragging ? 'dragging' : ''}`}>
+      <div className="exercise-header">
+        <button className="drag-handle" {...attributes} {...listeners} title="Drag to reorder">
+          ⋮⋮
+        </button>
+        <span className="exercise-order">#{exIdx + 1}</span>
+        {exercise.title ? (
+          <div className="exercise-title-display">
+            <span className="exercise-title">{exercise.title}</span>
+            <button
+              className="change-exercise-btn"
+              onClick={() => updateExercise(exIdx, 'title', '')}
+              title="Change exercise"
+            >
+              Change
+            </button>
+          </div>
+        ) : (
+          <select
+            className="exercise-select"
+            value={exercise.exerciseId}
+            onChange={(e) => updateExercise(exIdx, 'exerciseId', e.target.value)}
+          >
+            <option value="">Select exercise...</option>
+            {availableExercises.map(ex => (
+              <option key={ex.id} value={ex.id}>{ex.title}</option>
+            ))}
+          </select>
+        )}
+        <button
+          className="remove-exercise-btn"
+          onClick={() => removeExercise(exIdx)}
+          title="Remove exercise"
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="exercise-settings">
+        <div className="setting-field">
+          <label>Pause (seconds)</label>
+          <input
+            type="number"
+            value={exercise.pauseDurationSec}
+            onChange={(e) => updateExercise(exIdx, 'pauseDurationSec', parseInt(e.target.value) || 0)}
+          />
+        </div>
+        <div className="setting-field">
+          <label>Pause Type</label>
+          <select
+            value={exercise.pauseType}
+            onChange={(e) => updateExercise(exIdx, 'pauseType', e.target.value)}
+          >
+            <option value="between_series">Between Series</option>
+            <option value="between_exercises">Between Exercises</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="series-section">
+        <div className="series-header">
+          <strong>Series</strong>
+          <button className="add-series-btn" onClick={() => addSeries(exIdx)}>
+            + Add Set
+          </button>
+        </div>
+        <div className="series-list">
+          {exercise.series.map((s, sIdx) => (
+            <div key={s.id} className="series-row">
+              <span className="series-number">Set {s.seriesNumber}</span>
+              <input
+                type="number"
+                placeholder="Reps"
+                value={s.reps}
+                onChange={(e) => updateSeries(exIdx, sIdx, 'reps', parseInt(e.target.value) || 0)}
+              />
+              <input
+                type="number"
+                placeholder="Weight %"
+                value={s.weightPercentage}
+                onChange={(e) => updateSeries(exIdx, sIdx, 'weightPercentage', parseInt(e.target.value) || 0)}
+              />
+              <button
+                className="remove-series-btn"
+                onClick={() => removeSeries(exIdx, sIdx)}
+                title="Remove set"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function MuscleGroupExercisesEditor({ appUserUid, availableGroups, isPro }: MuscleGroupExercisesEditorProps) {
   const allowedGroups = isPro ? availableGroups : FREE_GROUPS
   const [activeGroup, setActiveGroup] = useState(allowedGroups[0])
@@ -36,6 +188,14 @@ export function MuscleGroupExercisesEditor({ appUserUid, availableGroups, isPro 
   const [availableExercises, setAvailableExercises] = useState<Array<{ id: string; title: string }>>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   // Fetch available exercises from exercises collection
   useEffect(() => {
@@ -145,6 +305,19 @@ export function MuscleGroupExercisesEditor({ appUserUid, availableGroups, isPro 
     setExercises(updated)
   }
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id) {
+      setExercises((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id)
+        const newIndex = items.findIndex((item) => item.id === over.id)
+
+        return arrayMove(items, oldIndex, newIndex)
+      })
+    }
+  }
+
   const handleSave = async () => {
     setSaving(true)
     try {
@@ -181,9 +354,14 @@ export function MuscleGroupExercisesEditor({ appUserUid, availableGroups, isPro 
     <Card className="muscle-group-exercises-editor">
       <div className="exercises-editor-header">
         <CardTitle>Muscle Group Exercises</CardTitle>
-        <Button loading={saving} onClick={handleSave}>
-          Save Exercises
-        </Button>
+        <SaveButton
+          onSave={handleSave}
+          loading={saving}
+          size="md"
+          confirmTitle="Save Exercises"
+          confirmMessage={`Are you sure you want to save the exercises for Training ${activeGroup.replace('group_', '').toUpperCase()}? This will update the exercises for this muscle group.`}
+          confirmText="Save"
+        />
       </div>
 
       <div className="group-tabs">
@@ -208,107 +386,25 @@ export function MuscleGroupExercisesEditor({ appUserUid, availableGroups, isPro 
           {exercises.length === 0 ? (
             <p className="no-exercises">No exercises in this group yet</p>
           ) : (
-            <div className="exercises-list">
-              {exercises.map((exercise, exIdx) => (
-                <div key={exercise.id} className="exercise-card">
-                  <div className="exercise-header">
-                    <span className="exercise-order">#{exIdx + 1}</span>
-                    {exercise.title ? (
-                      <div className="exercise-title-display">
-                        <span className="exercise-title">{exercise.title}</span>
-                        <button
-                          className="change-exercise-btn"
-                          onClick={() => updateExercise(exIdx, 'title', '')}
-                          title="Change exercise"
-                        >
-                          Change
-                        </button>
-                      </div>
-                    ) : (
-                      <select
-                        className="exercise-select"
-                        value={exercise.exerciseId}
-                        onChange={(e) => updateExercise(exIdx, 'exerciseId', e.target.value)}
-                      >
-                        <option value="">Select exercise...</option>
-                        {availableExercises.map(ex => (
-                          <option key={ex.id} value={ex.id}>{ex.title}</option>
-                        ))}
-                      </select>
-                    )}
-                    <button
-                      className="remove-exercise-btn"
-                      onClick={() => removeExercise(exIdx)}
-                      title="Remove exercise"
-                    >
-                      ×
-                    </button>
-                  </div>
-
-                  <div className="exercise-settings">
-                    <div className="setting-field">
-                      <label>Pause (seconds)</label>
-                      <input
-                        type="number"
-                        value={exercise.pauseDurationSec}
-                        onChange={(e) => updateExercise(exIdx, 'pauseDurationSec', parseInt(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="setting-field">
-                      <label>Pause Type</label>
-                      <select
-                        value={exercise.pauseType}
-                        onChange={(e) => updateExercise(exIdx, 'pauseType', e.target.value)}
-                      >
-                        <option value="between_series">Between Series</option>
-                        <option value="between_exercises">Between Exercises</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="series-section">
-                    <div className="series-header">
-                      <strong>Series</strong>
-                      <button className="add-series-btn" onClick={() => addSeries(exIdx)}>
-                        + Add Set
-                      </button>
-                    </div>
-
-                    <div className="series-list">
-                      {exercise.series.map((series, serIdx) => (
-                        <div key={series.id} className="series-row">
-                          <span className="series-number">Set {series.seriesNumber}</span>
-                          <input
-                            type="number"
-                            className="series-reps-input"
-                            placeholder="Reps"
-                            value={series.reps}
-                            onChange={(e) => updateSeries(exIdx, serIdx, 'reps', e.target.value)}
-                          />
-                          <div className="weight-input-group">
-                            <input
-                              type="number"
-                              className="series-weight-input"
-                              placeholder="Weight %"
-                              value={series.weightPercentage}
-                              onChange={(e) => updateSeries(exIdx, serIdx, 'weightPercentage', e.target.value)}
-                            />
-                            <span className="weight-unit">%</span>
-                          </div>
-                          <button
-                            className="remove-series-btn"
-                            onClick={() => removeSeries(exIdx, serIdx)}
-                            title="Remove set"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={exercises.map(e => e.id)} strategy={verticalListSortingStrategy}>
+                <div className="exercises-list">
+                  {exercises.map((exercise, exIdx) => (
+                    <SortableExercise
+                      key={exercise.id}
+                      exercise={exercise}
+                      exIdx={exIdx}
+                      availableExercises={availableExercises}
+                      updateExercise={updateExercise}
+                      removeExercise={removeExercise}
+                      addSeries={addSeries}
+                      updateSeries={updateSeries}
+                      removeSeries={removeSeries}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           )}
 
           <Button variant="secondary" onClick={addExercise}>

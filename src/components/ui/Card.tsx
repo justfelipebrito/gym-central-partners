@@ -26,6 +26,7 @@ export function Card({ children, style }: CardProps) {
 export function CardTitle({ children }: { children: ReactNode }) {
   return (
     <h2
+      className="card-title"
       style={{
         margin: '0 0 16px 0',
         fontSize: 15,

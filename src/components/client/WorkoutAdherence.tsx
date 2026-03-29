@@ -196,15 +196,11 @@ export function WorkoutAdherence({ appUserUid }: WorkoutAdherenceProps) {
       {/* Legend */}
       <div className="calendar-legend">
         <div className="legend-item">
-          <div className="legend-color trained-color" />
+          <div className="legend-color trained-color">A</div>
           <span>Trained</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color scheduled-color" />
-          <span>Scheduled</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-color rest-color" />
+          <div className="legend-color rest-color">✓</div>
           <span>Rest Day</span>
         </div>
       </div>

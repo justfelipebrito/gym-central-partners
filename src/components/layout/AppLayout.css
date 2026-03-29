@@ -1,0 +1,60 @@
+/* Mobile responsiveness for AppLayout */
+@media (max-width: 768px) {
+  /* Hide sidebar on mobile by default */
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .app-sidebar {
+    width: 100% !important;
+    height: auto !important;
+    padding: 12px !important;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .app-brand {
+    padding: 4px 8px 12px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .app-nav-list {
+    flex-direction: row !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 4px !important;
+    flex: 0 !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-nav-link {
+    white-space: nowrap;
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+  }
+
+  .app-nav-icon {
+    display: none;
+  }
+
+  .app-sidebar-footer {
+    display: none !important;
+  }
+
+  .app-content {
+    padding: 16px !important;
+  }
+}
+
+/* Tablet adjustments */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .app-sidebar {
+    width: 180px !important;
+  }
+
+  .app-content {
+    padding: 24px !important;
+  }
+}

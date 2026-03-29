@@ -1,5 +1,5 @@
 import { Card, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { SaveButton } from '@/components/ui/SaveButton'
 import './WeeklyScheduleEditor.css'
 
 interface WeeklyScheduleEditorProps {
@@ -53,9 +53,14 @@ export function WeeklyScheduleEditor({ schedule, onChange, onSave, availableGrou
             <span className="plan-badge">Free Plan - Groups A, B, C only</span>
           )}
         </div>
-        <Button loading={saving} onClick={onSave} size="sm">
-          Save Schedule
-        </Button>
+        <SaveButton
+          onSave={onSave}
+          loading={saving}
+          size="md"
+          confirmTitle="Save Schedule"
+          confirmMessage="Are you sure you want to save this weekly training schedule? This will update the client's schedule immediately."
+          confirmText="Save"
+        />
       </div>
       <p className="schedule-hint">
         Assign training groups to each day of the week. Select "Rest" for rest days.

@@ -6,6 +6,7 @@ import { useProfessional } from '@/hooks/useProfessional'
 import { upsertTrainingPlan, upsertDietPlan } from '@/lib/api/functions'
 import { SectionTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { SaveButton } from '@/components/ui/SaveButton'
 import { TrainingPlanEditor } from '@/components/plan/TrainingPlanEditor'
 import { DietPlanEditor } from '@/components/plan/DietPlanEditor'
 import { WeeklyScheduleEditor } from '@/components/plan/WeeklyScheduleEditor'
@@ -228,11 +229,17 @@ export function PlanPage() {
           {successMsg && <div className="message success">{successMsg}</div>}
 
           <div className="plan-actions">
-            <Button loading={saving} onClick={handleSaveExternalPlan}>
-              Save Plan
-            </Button>
+            <SaveButton
+              onSave={handleSaveExternalPlan}
+              loading={saving}
+              size="md"
+              confirmTitle="Save Plan"
+              confirmMessage={`Are you sure you want to save this ${isPT ? 'training' : 'diet'} plan? This will update the client's current plan.`}
+              confirmText="Save"
+            />
             <Button
               variant="secondary"
+              size="md"
               onClick={() => navigate(`/clients/${clientProfileId}`)}
             >
               Cancel

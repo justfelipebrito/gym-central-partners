@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfessional } from '@/hooks/useProfessional'
 import { colors, radius } from '@/lib/theme'
+import './AppLayout.css'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: '⊞' },
@@ -34,10 +35,10 @@ export function AppLayout() {
   }
 
   return (
-    <div style={styles.shell}>
-      <nav style={styles.sidebar}>
+    <div className="app-shell" style={styles.shell}>
+      <nav className="app-sidebar" style={styles.sidebar}>
         {/* Brand */}
-        <div style={styles.brand}>
+        <div className="app-brand" style={styles.brand}>
           <div style={styles.brandMark}>GC</div>
           <div>
             <div style={styles.brandName}>Partners</div>
@@ -50,17 +51,18 @@ export function AppLayout() {
         </div>
 
         {/* Nav links */}
-        <ul style={styles.navList}>
+        <ul className="app-nav-list" style={styles.navList}>
           {navItems.map((item) => (
             <li key={item.to}>
               <NavLink
                 to={item.to}
+                className="app-nav-link"
                 style={({ isActive }) => ({
                   ...styles.navLink,
                   ...(isActive ? styles.navLinkActive : {}),
                 })}
               >
-                <span style={styles.navIcon}>{item.icon}</span>
+                <span className="app-nav-icon" style={styles.navIcon}>{item.icon}</span>
                 {item.label}
               </NavLink>
             </li>
@@ -68,7 +70,7 @@ export function AppLayout() {
         </ul>
 
         {/* Footer */}
-        <div style={styles.sidebarFooter}>
+        <div className="app-sidebar-footer" style={styles.sidebarFooter}>
           <div style={styles.userCard}>
             <div style={styles.userAvatar}>
               {professional?.displayName?.charAt(0).toUpperCase() ?? '?'}
@@ -84,7 +86,7 @@ export function AppLayout() {
         </div>
       </nav>
 
-      <main style={styles.content}>
+      <main className="app-content" style={styles.content}>
         <Outlet />
       </main>
     </div>
