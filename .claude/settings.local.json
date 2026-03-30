@@ -14,7 +14,8 @@
       "Bash(npm run emulators:fresh:*)",
       "Bash(npx tsx:*)",
       "Bash(npm run build:*)",
-      "Bash(npm run dev)"
+      "Bash(npm run dev)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

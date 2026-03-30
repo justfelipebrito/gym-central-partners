@@ -8,11 +8,9 @@ import { Card, CardTitle, SectionTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { WeeklySchedule } from '@/components/client/WeeklySchedule'
 import { WorkoutAdherence } from '@/components/client/WorkoutAdherence'
+import { MealAdherence } from '@/components/client/MealAdherence'
+import { DietMeals } from '@/components/client/DietMeals'
 import { colors, radius } from '@/lib/theme'
-import {
-  subscribeMealLogs,
-  type MealLogEntry,
-} from '@/lib/progressAdapters'
 
 import type { ClientProfile, ManualProgressEntry, ReplacementRequest, Batch, Plan, TrainingPlanContent } from '@shared/types'
 import { format } from 'date-fns'
@@ -26,9 +24,6 @@ export function ClientProfilePage() {
 
   // App user data (name, height, weight, etc.)
   const [userData, setUserData] = useState<any>(null)
-
-  // App user progress
-  const [mealLogs, setMealLogs] = useState<MealLogEntry[]>([])
 
   // Manual progress
   const [manualEntries, setManualEntries] = useState<ManualProgressEntry[]>([])
@@ -68,17 +63,6 @@ export function ClientProfilePage() {
       }
     })
     return unsub
-  }, [profile])
-
-  // Subscribe to meal logs when profile is loaded
-  useEffect(() => {
-    if (!profile || profile.type !== 'app_user' || !profile.appUserUid) return
-
-    const uid = profile.appUserUid
-    const unsubMeals = subscribeMealLogs(uid, setMealLogs)
-    return () => {
-      unsubMeals()
-    }
   }, [profile])
 
   // Subscribe to manual progress
@@ -184,7 +168,7 @@ export function ClientProfilePage() {
         <CardTitle>Client Info</CardTitle>
         <dl style={styles.dl}>
           <dt>Name</dt><dd>{clientName}</dd>
-          {profile.type === 'app_user' && userData && (
+          {profile.type === 'app_user' && userData && !isCook && (
             <>
               {userData.height && <><dt>Height</dt><dd>{userData.height} cm</dd></>}
               {userData.weight && <><dt>Weight</dt><dd>{userData.weight} kg</dd></>}
@@ -204,32 +188,18 @@ export function ClientProfilePage() {
         <WeeklySchedule appUserUid={profile.appUserUid} />
       )}
 
+      {/* Diet Plan (Cook only) */}
+      {isCook && profile.type === 'app_user' && profile.appUserUid && (
+        <DietMeals appUserUid={profile.appUserUid} />
+      )}
+
       {/* Progress panels */}
       {profile.type === 'app_user' && profile.appUserUid && (
         <>
           {isPT && <WorkoutAdherence appUserUid={profile.appUserUid} />}
 
           {(isNutritionist || isCook) && (
-            <Card style={{ marginBottom: 24 }}>
-              <CardTitle>Meals Consumed (Live)</CardTitle>
-              {mealLogs.length === 0 ? (
-                <p style={styles.muted}>No meal log data available yet.</p>
-              ) : (
-                <ul style={styles.progressList}>
-                  {mealLogs.slice(0, 14).map((m) => (
-                    <li key={m.dateLabel} style={styles.progressItem}>
-                      <span style={styles.progressLabel}>{m.dateLabel}</span>
-                      <span style={styles.progressValue}>
-                        {m.mealsConsumed} / 5 meals
-                        {m.allConsumed && (
-                          <span style={{ color: colors.success, marginLeft: 6 }}>✓ all</span>
-                        )}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Card>
+            <MealAdherence appUserUid={profile.appUserUid} />
           )}
         </>
       )}

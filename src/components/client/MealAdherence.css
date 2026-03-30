@@ -1,0 +1,232 @@
+/* Meal Adherence Component */
+.meal-adherence-card {
+  margin-bottom: 24px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.loading-text,
+.no-data-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Statistics Row */
+.meal-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.meal-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.meal-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.meal-stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+/* Calendar */
+.meal-calendar {
+  margin-bottom: 16px;
+}
+
+.meal-calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.meal-weekday-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px;
+}
+
+.meal-calendar-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 2px;
+}
+
+.meal-calendar-cell {
+  aspect-ratio: 1;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: all 0.15s;
+}
+
+.meal-calendar-cell.empty {
+  background: transparent;
+  border-color: transparent;
+}
+
+.meal-calendar-cell.all-consumed {
+  background: #10B981;
+  border-color: #059669;
+}
+
+.meal-cell-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+}
+
+.meal-count {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.meal-calendar-cell.all-consumed .meal-count {
+  color: white;
+}
+
+.meal-date {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.meal-calendar-cell.all-consumed .meal-date {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Legend */
+.meal-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.meal-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.meal-legend-box {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.all-consumed-box {
+  background: #10B981;
+  border-color: #059669;
+}
+
+.partial-box {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+}
+
+.meal-legend-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .meal-stats {
+    gap: 12px;
+  }
+
+  .meal-stat-value {
+    font-size: 20px;
+  }
+
+  .meal-stat-label {
+    font-size: 11px;
+  }
+
+  .meal-weekday-label {
+    font-size: 10px;
+  }
+
+  .meal-count {
+    font-size: 11px;
+  }
+
+  .meal-date {
+    font-size: 8px;
+  }
+
+  .meal-calendar-week {
+    gap: 1px;
+    margin-bottom: 1px;
+  }
+
+  .meal-calendar-header {
+    gap: 1px;
+  }
+}
+
+@media (max-width: 640px) {
+  .meal-stats {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .meal-stat-item {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+  }
+
+  .meal-stat-value {
+    font-size: 18px;
+  }
+
+  .meal-stat-label {
+    font-size: 12px;
+    text-align: right;
+  }
+
+  .meal-legend {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .meal-legend-label {
+    font-size: 11px;
+  }
+}

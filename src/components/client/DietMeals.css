@@ -1,0 +1,210 @@
+/* Diet Meals Component */
+.diet-meals-card {
+  margin-bottom: 24px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.diet-loading,
+.diet-empty {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Meals List */
+.meals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Meal Card */
+.meal-card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+.meal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 16px;
+}
+
+.meal-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.meal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* Meal Option Switcher */
+.meal-option-switcher {
+  display: flex;
+  gap: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  width: fit-content;
+}
+
+.option-btn {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.option-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.option-btn.active {
+  background: var(--primary);
+  color: white;
+}
+
+.meal-totals {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.meal-total-item {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.meal-total-item strong {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* No Ingredients */
+.no-ingredients {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Ingredients List */
+.ingredients-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ingredient-item {
+  background: var(--card);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+.ingredient-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.ingredient-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ingredient-quantity {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.ingredient-macros {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .meal-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .meal-header-left {
+    width: 100%;
+  }
+
+  .meal-option-switcher {
+    width: 100%;
+  }
+
+  .option-btn {
+    flex: 1;
+  }
+
+  .meal-totals {
+    justify-content: flex-start;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .meal-total-item {
+    font-size: 11px;
+  }
+
+  .ingredient-item {
+    padding: 8px 10px;
+  }
+
+  .ingredient-name,
+  .ingredient-quantity {
+    font-size: 13px;
+  }
+
+  .ingredient-macros {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 640px) {
+  .meal-card {
+    padding: 12px;
+  }
+
+  .meal-title {
+    font-size: 15px;
+  }
+
+  .meal-totals {
+    gap: 6px;
+  }
+
+  .option-btn {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+}

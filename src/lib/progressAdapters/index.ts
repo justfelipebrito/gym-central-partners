@@ -29,6 +29,7 @@ import {
   orderBy,
   limit,
   onSnapshot,
+  getDocs,
   Timestamp,
   Unsubscribe,
 } from 'firebase/firestore'
@@ -150,26 +151,67 @@ export function subscribeWeeklyWorkoutProgress(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Nutritionist / Cook view: subscribe to daily meal consumption (last 30 days).
+// Nutritionist / Cook view: subscribe to daily meal consumption (last 14 days).
 // Returns one entry per day with mealsConsumedCount (0-5).
+// Uses the SAME source of truth as iOS: users/{uid}/diet/data/eaten/{dateKey}/meals
 // ─────────────────────────────────────────────────────────────────────────────
 export function subscribeMealLogs(
   appUserUid: string,
   onUpdate: (entries: MealLogEntry[]) => void,
   onError?: (err: Error) => void,
 ): Unsubscribe {
-  return subscribeDailyProgress(
-    appUserUid,
-    30,
-    (entries) => {
-      const mapped: MealLogEntry[] = entries.map((e) => ({
-        date: e.date,
-        dateLabel: format(e.date, 'MMM d'),
-        mealsConsumed: e.mealsConsumedCount,
-        allConsumed: e.allMealsConsumed,
-      }))
-      onUpdate(mapped)
+  // Generate last 14 days date keys
+  const dateKeys: string[] = []
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  for (let i = 13; i >= 0; i--) {
+    const date = new Date(today)
+    date.setDate(date.getDate() - i)
+    const dateKey = format(date, 'yyyy-MM-dd')
+    dateKeys.push(dateKey)
+  }
+
+  // Subscribe to the first date (to trigger updates)
+  // We'll fetch all dates on each update
+  const firstDateKey = dateKeys[0]
+  const basePath = `users/${appUserUid}/diet/data/eaten`
+
+  const unsubscribe = onSnapshot(
+    collection(db, basePath),
+    async () => {
+      try {
+        // Fetch meal counts for all 14 days
+        const results: MealLogEntry[] = []
+
+        for (let i = 0; i < dateKeys.length; i++) {
+          const dateKey = dateKeys[i]
+          const date = new Date(today)
+          date.setDate(date.getDate() - (13 - i))
+
+          // Query eaten meals for this date
+          const mealsPath = `${basePath}/${dateKey}/meals`
+          const mealsSnap = await getDocs(collection(db, mealsPath))
+          const mealsConsumed = mealsSnap.size
+          const allConsumed = mealsConsumed === 5
+
+          results.push({
+            date: date,
+            dateLabel: format(date, 'MMM d'),
+            mealsConsumed: mealsConsumed,
+            allConsumed: allConsumed,
+          })
+        }
+
+        onUpdate(results)
+      } catch (err) {
+        if (onError) onError(err as Error)
+      }
     },
-    onError,
+    (err) => {
+      if (onError) onError(err)
+    }
   )
+
+  return unsubscribe
 }
